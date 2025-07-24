@@ -3,56 +3,170 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <link href="https://cdn.jsdelivr.net/npm/flowbite@3.1.2/dist/flowbite.min.css" rel="stylesheet" />
-    <link
-    href="https://cdn.jsdelivr.net/npm/remixicon@4.5.0/fonts/remixicon.css"
-    rel="stylesheet"
-/>
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@4.5.0/fonts/remixicon.css" rel="stylesheet" />
+    <title>Dashboard</title>
+    <style>
+      .glass {
+        background: rgba(255,255,255,0.25);
+        backdrop-filter: blur(15px);
+        border: 1px solid rgba(255,255,255,0.2);
+        border-radius: 1rem;
+      }
+      .file-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+      }
+      .floating-btn {
+        animation: float 3s ease-in-out infinite;
+      }
+      @keyframes float {
+        0%, 100% { transform: translateY(0px); }
+        50% { transform: translateY(-8px); }
+      }
+      .gradient-text {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+    </style>
   </head>
-  <body>
-    <main class="p-4 bg-gray-100 dark:bg-gray-800 h-screen w-screen">
-        <button onclick="showPopUp()" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-             upload file
-  </button >
-  <div class="pop hidden backdrop-blur fixed top-0 left-0 h-screen w-screen flex items-center justify-center">
-    
-    <form action="/upload-file" method="post" enctype="multipart/form-data">
-
-          <div class="flex items-center justify-center w-96">
-    <label for="dropzone-file" class="flex flex-col items-center justify-center w-full h-64 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 dark:hover:bg-gray-800 dark:bg-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:hover:border-gray-500 dark:hover:bg-gray-600">
-        <div class="flex flex-col items-center justify-center pt-5 pb-6">
-            <svg class="w-8 h-8 mb-4 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
-                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/>
-            </svg>
-            <p class="mb-2 text-sm text-gray-500 dark:text-gray-400"><span class="font-semibold">Click to upload</span> or drag and drop</p>
-            <p class="text-xs text-gray-500 dark:text-gray-400">SVG, PNG, JPG or GIF (MAX. 800x400px)</p>
+  <body class="bg-gradient-to-br from-indigo-100 via-purple-50 to-pink-100 min-h-screen">
+    <!-- Header -->
+    <header class="relative p-6">
+      <% if (typeof user !== 'undefined') { %>
+        <div class="text-center">
+          <h1 class="text-4xl font-bold gradient-text mb-2">
+            Hello, <%= user.username || user.email %>! 👋
+          </h1>
+          <p class="text-gray-600">Welcome to your personal cloud drive</p>
         </div>
-        <input id="dropzone-file" type="file" class="hidden" name="file" />
-    </label>
-    </div> 
-    <button class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded m-px">
-        Upload file
-    </button>
-    </form>
-    <button
-    class="absolute top-4 right-4 text-gray-500 dark:text-gray-400 text-xl" 
-    onclick="hidePopUp()"><i class="ri-close-large-line"></i></button>
-  
+        <form action="/logout" method="post" class="absolute top-6 right-6">
+          <button class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition-colors">
+            <i class="ri-logout-box-line mr-1"></i>Logout
+          </button>
+        </form>
+      <% } %>
+    </header>
 
-  </div>
-  
+    <!-- Upload Section -->
+    <section class="text-center py-8">
+      <div class="flex justify-center gap-4">
+        <button onclick="showUpload()" class="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-black font-bold py-3 px-8 rounded-xl shadow-lg transition-all duration-300">
+          <i class="ri-upload-cloud-2-line mr-2"></i>Upload Files
+        </button>
+        <button onclick="showBulkUpload()" class="bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700 text-black font-bold py-3 px-6 rounded-xl shadow-lg transition-all duration-300">
+          <i class="ri-folder-upload-line mr-2"></i>Bulk Upload
+        </button>
+      </div>
+    </section>
+
+    <!-- Upload Modal -->
+    <div id="uploadModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+      <form action="/upload-file" method="post" enctype="multipart/form-data" class="glass p-8 w-full max-w-md mx-4 relative">
+        <button type="button" onclick="hideUpload()" class="absolute top-4 right-4 text-gray-500 hover:text-gray-700">
+          <i class="ri-close-line text-2xl"></i>
+        </button>
+        <h3 class="text-xl font-bold mb-6 text-center">Upload File</h3>
+        <label for="file-input" class="block w-full h-48 border-2 border-dashed border-indigo-300 rounded-lg cursor-pointer bg-indigo-50 hover:bg-indigo-100 transition-colors">
+          <div class="flex flex-col items-center justify-center h-full">
+            <i class="ri-upload-2-line text-4xl text-indigo-500 mb-2"></i>
+            <p class="text-indigo-700 font-medium">Click to upload</p>
+            <p class="text-sm text-gray-500">Any file type</p>
+          </div>
+          <input id="file-input" type="file" name="file" class="hidden" />
+        </label>
+        <button type="submit" class="w-full mt-6 bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-lg transition-colors">
+          Upload
+        </button>
+      </form>
+    </div>
+
+    <!-- Bulk Upload Modal -->
+    <div id="bulkModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+      <form action="/bulk-upload" method="post" enctype="multipart/form-data" class="glass p-8 w-full max-w-md mx-4 relative">
+        <button type="button" onclick="hideBulkUpload()" class="absolute top-4 right-4 text-gray-500 hover:text-gray-700">
+          <i class="ri-close-line text-2xl"></i>
+        </button>
+        <h3 class="text-xl font-bold mb-6 text-center">Bulk Upload</h3>
+        <label for="bulk-input" class="block w-full h-48 border-2 border-dashed border-green-300 rounded-lg cursor-pointer bg-green-50 hover:bg-green-100 transition-colors">
+          <div class="flex flex-col items-center justify-center h-full">
+            <i class="ri-folder-upload-line text-4xl text-green-500 mb-2"></i>
+            <p class="text-green-700 font-medium">Select multiple files</p>
+            <p class="text-sm text-gray-500">Hold Ctrl/Cmd</p>
+          </div>
+          <input id="bulk-input" type="file" name="file" multiple class="hidden" />
+        </label>
+        <button type="submit" class="w-full mt-6 bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg transition-colors">
+          Upload Files
+        </button>
+      </form>
+    </div>
+
+    <!-- Files Section -->
+    <main class="container mx-auto px-6 pb-12">
+      <% if (typeof files !== 'undefined' && files.length > 0) { %>
+        <div class="text-center mb-8">
+          <h2 class="text-3xl font-bold gradient-text mb-2">Your Files</h2>
+          <p class="text-gray-600">Manage your uploaded files</p>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <% files.forEach(function(file) { %>
+            <div class="file-card glass p-6 text-center transition-all duration-300">
+              <i class="ri-file-3-line text-4xl text-indigo-500 mb-4"></i>
+              <h3 class="font-semibold text-gray-800 mb-2 break-all"><%= file.originalname %></h3>
+              <p class="text-xs text-gray-500 mb-4 break-all"><%= file.path %></p>
+              <div class="flex gap-2 justify-center">
+                <a href="/<%= file.path.replace(/\\/g, '/') %>" target="_blank" class="bg-indigo-500 hover:bg-indigo-600 text-white px-3 py-1 rounded text-sm transition-colors">
+                  <i class="ri-eye-line mr-1"></i>View
+                </a>
+                <a href="/<%= file.path.replace(/\\/g, '/') %>" download class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm transition-colors">
+                  <i class="ri-download-line mr-1"></i>Download
+                </a>
+              </div>
+            </div>
+          <% }) %>
+        </div>
+      <% } else { %>
+        <div class="text-center glass p-12 max-w-lg mx-auto">
+          <i class="ri-folder-open-line text-6xl text-indigo-300 mb-4"></i>
+          <h3 class="text-2xl font-bold text-gray-700 mb-2">No files yet</h3>
+          <p class="text-gray-600 mb-6">Upload your first file to get started!</p>
+          <button onclick="showUpload()" class="bg-indigo-500 hover:bg-indigo-600 text-white px-6 py-3 rounded-lg transition-colors">
+            <i class="ri-upload-cloud-2-line mr-2"></i>Upload First File
+          </button>
+        </div>
+      <% } %>
     </main>
-  
-    
-    <script src="https://cdn.jsdelivr.net/npm/flowbite@3.1.2/dist/flowbite.min.js"></script>
+
     <script>
-        function showPopUp(){
-            document.querySelector('.pop').style.display='flex'
+      function showUpload() {
+        document.getElementById('uploadModal').classList.remove('hidden');
+      }
+      function hideUpload() {
+        document.getElementById('uploadModal').classList.add('hidden');
+      }
+      function showBulkUpload() {
+        document.getElementById('bulkModal').classList.remove('hidden');
+      }
+      function hideBulkUpload() {
+        document.getElementById('bulkModal').classList.add('hidden');
+      }
+
+      // File selection feedback
+      document.getElementById('file-input').addEventListener('change', function(e) {
+        if (e.target.files.length > 0) {
+          const label = e.target.previousElementSibling;
+          label.querySelector('p').textContent = `Selected: ${e.target.files[0].name}`;
         }
-        function hidePopUp(){
-            document.querySelector('.pop').style.display='none'
+      });
+
+      document.getElementById('bulk-input').addEventListener('change', function(e) {
+        if (e.target.files.length > 0) {
+          const label = e.target.previousElementSibling;
+          label.querySelector('p').textContent = `Selected: ${e.target.files.length} file(s)`;
         }
+      });
     </script>
   </body>
 </html>

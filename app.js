@@ -17,7 +17,11 @@ app.use(express.urlencoded({extended:true}))
 //     res.render("index");
 // })
 app.use('/',indexRouter)
-app.use('/user',userRouter)
+app.use('/',userRouter)
+
+// ...existing code...
+app.use('/uploads', express.static('uploads'));
+// ...existing code...
 
 app.listen(3000,()=>{
     console.log("Server is  running on port 3000");

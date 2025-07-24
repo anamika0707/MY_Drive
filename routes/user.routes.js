@@ -42,12 +42,28 @@ router.post('/register',
        password:hashPassword
     })
 
-   res.json(newUser)
+//    res.json(newUser)
+// })
+
+// router.get('/login',(req,res)=>{
+//     res.render('login')
+
+// Create JWT token
+    const token = jwt.sign({
+        userID: newUser._id,
+        email: newUser.email,
+        username: newUser.username
+    }, process.env.JWT_SECRET);
+
+    res.cookie('token', token);
+    res.redirect('/home'); 
+
+
 })
 
-router.get('/login',(req,res)=>{
-    res.render('login')
-})
+router.get('/login', (req, res) => {
+    res.render('login');
+});
 
 router.post('/login', body('username').trim().isLength({min:3}),
     body('password').trim().isLength({min:5}),
@@ -89,8 +105,8 @@ router.post('/login', body('username').trim().isLength({min:3}),
     )
 
    res.cookie('token',token)
-   res.send('logged in')
-
+//    res.send('logged in')
+     res.redirect('/home')
 
     }
     
